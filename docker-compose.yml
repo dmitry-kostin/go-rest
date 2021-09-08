@@ -1,0 +1,15 @@
+version: '3.5'
+
+services:
+  pg-db:
+    image: postgres:13
+    container_name: pg-db
+    restart: unless-stopped
+    volumes:
+      - ./tmp/pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - 5432:5432

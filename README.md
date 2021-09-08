@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <img src="https://www.machinelearningmastery.ru/img/0-163193-239529.png" alt="Logo" width="450" height="173">
+  <img src="https://repository-images.githubusercontent.com/397879110/ca96c957-860d-4ec9-a37c-f3274b15d997" alt="Logo" width="640">
 
 <h3 align="center">Go Rest API Starter Template</h3>
   <p align="center">

@@ -101,6 +101,7 @@ r := render.New(render.Options{
     UseMutexLock: true, // Overrides the default no lock implementation and uses the standard `sync.RWMutex` lock.
     UnEscapeHTML: true, // Replace ensure '&<>' are output correctly (JSON only).
     StreamingJSON: true, // Streams the JSON response via json.Encoder.
+    HTMLTemplateOption: "missingkey=error", // Sets the option value for HTML templates. See https://pkg.go.dev/html/template#Template.Option for a list of known options.
     RequirePartials: true, // Return an error if a template is missing a partial used in a layout.
     DisableHTTPErrorRendering: true, // Disables automatic rendering of http.StatusInternalServerError when an error occurs.
 })
@@ -139,6 +140,7 @@ r := render.New(render.Options{
     IsDevelopment: false,
     UseMutexLock: false,
     UnEscapeHTML: false,
+    HTMLTemplateOption: "",
     StreamingJSON: false,
     RequirePartials: false,
     DisableHTTPErrorRendering: false,
@@ -148,7 +150,7 @@ r := render.New(render.Options{
 ~~~
 
 ### JSON vs Streaming JSON
-By default, Render does **not** stream JSON to the `http.ResponseWriter`. It instead marshalls your object into a byte array, and if no errors occurred, writes that byte array to the `http.ResponseWriter`. If you would like to use the built it in streaming functionality (`json.Encoder`), you can set the `StreamingJSON` setting to `true`. This will stream the output directly to the `http.ResponseWriter`. Also note that streaming is only implemented in `render.JSON` and not `render.JSONP`, and the `UnEscapeHTML` and `Indent` options are ignored when streaming.
+By default, Render does **not** stream JSON to the `http.ResponseWriter`. It instead marshalls your object into a byte array, and if no errors occurred, writes that byte array to the `http.ResponseWriter`. If you would like to use the built it in streaming functionality (`json.Encoder`), you can set the `StreamingJSON` setting to `true`. This will stream the output directly to the `http.ResponseWriter`. Also note that streaming is only implemented in `render.JSON` and not `render.JSONP`.
 
 ### Loading Templates
 By default Render will attempt to load templates with a '.tmpl' extension from the "templates" directory. Templates are found by traversing the templates directory and are named by path and basename. For instance, the following directory structure:

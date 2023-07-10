@@ -1,4 +1,4 @@
-# Secure [![GoDoc](https://godoc.org/github.com/unrolled/secure?status.svg)](http://godoc.org/github.com/unrolled/secure) [![Test](https://github.com/unrolled/secure/workflows/Test/badge.svg?branch=v1)](https://github.com/unrolled/secure/actions)
+# Secure [![GoDoc](https://godoc.org/github.com/unrolled/secure?status.svg)](http://godoc.org/github.com/unrolled/secure) [![Test](https://github.com/unrolled/secure/workflows/tests/badge.svg?branch=v1)](https://github.com/unrolled/secure/actions)
 
 Secure is an HTTP middleware for Go that facilitates some quick security wins. It's a standard net/http [Handler](http://golang.org/pkg/net/http/#Handler), and can be used with many [frameworks](#integration-examples) or directly with Go's net/http package.
 
@@ -11,7 +11,7 @@ package main
 import (
     "net/http"
 
-    "github.com/unrolled/secure" // or "gopkg.in/unrolled/secure.v1"
+    "github.com/unrolled/secure"
 )
 
 var myHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -63,6 +63,7 @@ Secure comes with a variety of configuration options (Note: these are not the de
 s := secure.New(secure.Options{
     AllowedHosts: []string{"ssl.example.com"}, // AllowedHosts is a list of fully qualified domain names that are allowed. Default is empty list, which allows any and all host names.
     AllowedHostsAreRegex: false,  // AllowedHostsAreRegex determines, if the provided AllowedHosts slice contains valid regular expressions. Default is false.
+    AllowRequestFunc: nil, // AllowRequestFunc is a custom function type that allows you to determine if the request should proceed or not based on your own custom logic. Default is nil.
     HostsProxyHeaders: []string{"X-Forwarded-Hosts"}, // HostsProxyHeaders is a set of header keys that may hold a proxied hostname value for the request.
     SSLRedirect: true, // If SSLRedirect is set to true, then only allow HTTPS requests. Default is false.
     SSLTemporaryRedirect: false, // If SSLTemporaryRedirect is true, the a 302 will be used while redirecting. Default is false (301).
@@ -83,6 +84,7 @@ s := secure.New(secure.Options{
     ReferrerPolicy: "same-origin", // ReferrerPolicy allows the Referrer-Policy header with the value to be set with a custom value. Default is "".
     FeaturePolicy: "vibrate 'none';", // Deprecated: this header has been renamed to PermissionsPolicy. FeaturePolicy allows the Feature-Policy header with the value to be set with a custom value. Default is "".
     PermissionsPolicy: "fullscreen=(), geolocation=()", // PermissionsPolicy allows the Permissions-Policy header with the value to be set with a custom value. Default is "".
+    CrossOriginOpenerPolicy: "same-origin", // CrossOriginOpenerPolicy allows the Cross-Origin-Opener-Policy header with the value to be set with a custom value. Default is "".
     ExpectCTHeader: `enforce, max-age=30, report-uri="https://www.example.com/ct-report"`,
 
     IsDevelopment: true, // This will cause the AllowedHosts, SSLRedirect, and STSSeconds/STSIncludeSubdomains options to be ignored during development. When deploying to production, be sure to set this to false.
@@ -101,6 +103,7 @@ s := secure.New()
 l := secure.New(secure.Options{
     AllowedHosts: []string,
     AllowedHostsAreRegex: false,
+    AllowRequestFunc: nil,
     HostsProxyHeaders: []string,
     SSLRedirect: false,
     SSLTemporaryRedirect: false,
@@ -119,15 +122,25 @@ l := secure.New(secure.Options{
     ReferrerPolicy: "",
     FeaturePolicy: "",
     PermissionsPolicy: "",
+    CrossOriginOpenerPolicy: "",
     ExpectCTHeader: "",
     IsDevelopment: false,
 })
 ~~~
-Also note the default bad host handler returns an error:
+The default bad host handler returns the following error:
 ~~~ go
 http.Error(w, "Bad Host", http.StatusInternalServerError)
 ~~~
-Call `secure.SetBadHostHandler` to change the bad host handler.
+Call `secure.SetBadHostHandler` to set your own custom handler.
+
+The default bad request handler returns the following error:
+~~~ go
+http.Error(w, "Bad Request", http.StatusBadRequest)
+~~~
+Call `secure.SetBadRequestHandler` to set your own custom handler.
+
+### Allow Request Function
+Secure allows you to set a custom function (`func(r *http.Request) bool`) for the `AllowRequestFunc` option. You can use this function as a custom filter to allow the request to continue or simply reject it. This can be handy if you need to do any dynamic filtering on any of the request properties. It should be noted that this function will be called on every request, so be sure to make your checks quick and not relying on time consuming external calls (or you will be slowing down all requests). See above on how to set a custom handler for the rejected requests.
 
 ### Redirecting HTTP to HTTPS
 If you want to redirect all HTTP requests to HTTPS, you can use the following example.
@@ -140,7 +153,7 @@ import (
     "log"
     "net/http"
 
-    "github.com/unrolled/secure" // or "gopkg.in/unrolled/secure.v1"
+    "github.com/unrolled/secure"
 )
 
 var myHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -173,7 +186,26 @@ The STS header will only be sent on verified HTTPS connections (and when `IsDeve
 * The `preload` flag is required for domain inclusion in Chrome's [preload](https://hstspreload.appspot.com/) list.
 
 ### Content Security Policy
-If you need dynamic support for CSP while using Websockets, check out this other middleware [awakenetworks/csp](https://github.com/awakenetworks/csp).
+You can utilize the CSP Builder to create your policies:
+
+~~~ go
+import (
+	"github.com/unrolled/secure"
+	"github.com/unrolled/secure/cspbuilder"
+)
+
+cspBuilder := cspbuilder.Builder{
+	Directives: map[string][]string{
+		cspbuilder.DefaultSrc: {"self"},
+		cspbuilder.ScriptSrc:  {"self", "www.google-analytics.com"},
+		cspbuilder.ImgSrc:     {"*"},
+	},
+}
+
+opt := secure.Options{
+	ContentSecurityPolicy: cspBuilder.MustBuild(),
+}
+~~~
 
 ## Integration examples
 
@@ -186,7 +218,7 @@ import (
     "net/http"
 
     "github.com/pressly/chi"
-    "github.com/unrolled/secure" // or "gopkg.in/unrolled/secure.v1"
+    "github.com/unrolled/secure"
 )
 
 func main() {
@@ -214,7 +246,7 @@ import (
     "net/http"
 
     "github.com/labstack/echo"
-    "github.com/unrolled/secure" // or "gopkg.in/unrolled/secure.v1"
+    "github.com/unrolled/secure"
 )
 
 func main() {
@@ -239,7 +271,7 @@ package main
 
 import (
     "github.com/gin-gonic/gin"
-    "github.com/unrolled/secure" // or "gopkg.in/unrolled/secure.v1"
+    "github.com/unrolled/secure"
 )
 
 func main() {
@@ -282,7 +314,7 @@ package main
 import (
     "net/http"
 
-    "github.com/unrolled/secure" // or "gopkg.in/unrolled/secure.v1"
+    "github.com/unrolled/secure"
     "github.com/zenazn/goji"
     "github.com/zenazn/goji/web"
 )
@@ -307,7 +339,7 @@ package main
 
 import (
     "github.com/kataras/iris/v12"
-    "github.com/unrolled/secure" // or "gopkg.in/unrolled/secure.v1"
+    "github.com/unrolled/secure"
 )
 
 func main() {
@@ -348,7 +380,7 @@ import (
     "net/http"
 
     "github.com/gorilla/mux"
-    "github.com/unrolled/secure" // or "gopkg.in/unrolled/secure.v1"
+    "github.com/unrolled/secure"
 )
 
 func main() {
@@ -373,7 +405,7 @@ import (
     "net/http"
 
     "github.com/urfave/negroni"
-    "github.com/unrolled/secure" // or "gopkg.in/unrolled/secure.v1"
+    "github.com/unrolled/secure"
 )
 
 func main() {

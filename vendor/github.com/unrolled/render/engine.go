@@ -75,10 +75,12 @@ func (d Data) Render(w io.Writer, v interface{}) error {
 		if c != "" {
 			d.Head.ContentType = c
 		}
+
 		d.Head.Write(hw)
 	}
 
 	_, _ = w.Write(v.([]byte))
+
 	return nil
 }
 
@@ -99,6 +101,7 @@ func (h HTML) Render(w io.Writer, binding interface{}) error {
 	if hw, ok := w.(http.ResponseWriter); ok {
 		h.Head.Write(hw)
 	}
+
 	_, _ = buf.WriteTo(w)
 
 	return nil
@@ -110,34 +113,36 @@ func (j JSON) Render(w io.Writer, v interface{}) error {
 		return j.renderStreamingJSON(w, v)
 	}
 
-	var result []byte
-	var err error
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(!j.UnEscapeHTML)
 
 	if j.Indent {
-		result, err = json.MarshalIndent(v, "", "  ")
-		result = append(result, '\n')
-	} else {
-		result, err = json.Marshal(v)
+		encoder.SetIndent("", "  ")
 	}
-	if err != nil {
+
+	if err := encoder.Encode(v); err != nil {
 		return err
 	}
 
-	// Unescape HTML if needed.
-	if j.UnEscapeHTML {
-		result = bytes.ReplaceAll(result, []byte("\\u003c"), []byte("<"))
-		result = bytes.ReplaceAll(result, []byte("\\u003e"), []byte(">"))
-		result = bytes.ReplaceAll(result, []byte("\\u0026"), []byte("&"))
-	}
+	output := buf.Bytes()
 
 	// JSON marshaled fine, write out the result.
 	if hw, ok := w.(http.ResponseWriter); ok {
 		j.Head.Write(hw)
 	}
+
 	if len(j.Prefix) > 0 {
 		_, _ = w.Write(j.Prefix)
 	}
-	_, _ = w.Write(result)
+
+	// Remove the newline that json.Encode injects when not indenting the output.
+	if !j.Indent {
+		output = bytes.TrimSuffix(output, []byte("\n"))
+	}
+
+	_, _ = w.Write(output)
+
 	return nil
 }
 
@@ -145,16 +150,25 @@ func (j JSON) renderStreamingJSON(w io.Writer, v interface{}) error {
 	if hw, ok := w.(http.ResponseWriter); ok {
 		j.Head.Write(hw)
 	}
+
 	if len(j.Prefix) > 0 {
 		_, _ = w.Write(j.Prefix)
 	}
 
-	return json.NewEncoder(w).Encode(v)
+	encoder := json.NewEncoder(w)
+	encoder.SetEscapeHTML(!j.UnEscapeHTML)
+
+	if j.Indent {
+		encoder.SetIndent("", "  ")
+	}
+
+	return encoder.Encode(v)
 }
 
 // Render a JSONP response.
 func (j JSONP) Render(w io.Writer, v interface{}) error {
 	var result []byte
+
 	var err error
 
 	if j.Indent {
@@ -162,6 +176,7 @@ func (j JSONP) Render(w io.Writer, v interface{}) error {
 	} else {
 		result, err = json.Marshal(v)
 	}
+
 	if err != nil {
 		return err
 	}
@@ -170,6 +185,7 @@ func (j JSONP) Render(w io.Writer, v interface{}) error {
 	if hw, ok := w.(http.ResponseWriter); ok {
 		j.Head.Write(hw)
 	}
+
 	_, _ = w.Write([]byte(j.Callback + "("))
 	_, _ = w.Write(result)
 	_, _ = w.Write([]byte(");"))
@@ -178,6 +194,7 @@ func (j JSONP) Render(w io.Writer, v interface{}) error {
 	if j.Indent {
 		_, _ = w.Write([]byte("\n"))
 	}
+
 	return nil
 }
 
@@ -188,16 +205,19 @@ func (t Text) Render(w io.Writer, v interface{}) error {
 		if c != "" {
 			t.Head.ContentType = c
 		}
+
 		t.Head.Write(hw)
 	}
 
 	_, _ = w.Write([]byte(v.(string)))
+
 	return nil
 }
 
 // Render an XML response.
 func (x XML) Render(w io.Writer, v interface{}) error {
 	var result []byte
+
 	var err error
 
 	if x.Indent {
@@ -206,6 +226,7 @@ func (x XML) Render(w io.Writer, v interface{}) error {
 	} else {
 		result, err = xml.Marshal(v)
 	}
+
 	if err != nil {
 		return err
 	}
@@ -214,9 +235,12 @@ func (x XML) Render(w io.Writer, v interface{}) error {
 	if hw, ok := w.(http.ResponseWriter); ok {
 		x.Head.Write(hw)
 	}
+
 	if len(x.Prefix) > 0 {
 		_, _ = w.Write(x.Prefix)
 	}
+
 	_, _ = w.Write(result)
+
 	return nil
 }

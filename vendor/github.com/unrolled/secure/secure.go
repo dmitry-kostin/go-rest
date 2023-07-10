@@ -27,22 +27,30 @@ const (
 	featurePolicyHeader     = "Feature-Policy"
 	permissionsPolicyHeader = "Permissions-Policy"
 	expectCTHeader          = "Expect-CT"
+	coopHeader              = "Cross-Origin-Opener-Policy"
 
 	ctxDefaultSecureHeaderKey = secureCtxKey("SecureResponseHeader")
 	cspNonceSize              = 16
 )
 
-// SSLHostFunc a type whose pointer is the type of field `SSLHostFunc` of `Options` struct
+// SSLHostFunc is a custom function type that can be used to dynamically set the SSL host of a request.
 type SSLHostFunc func(host string) (newHost string)
+
+// AllowRequestFunc is a custom function type that can be used to dynamically determine if a request should proceed or not.
+type AllowRequestFunc func(r *http.Request) bool
 
 func defaultBadHostHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Bad Host", http.StatusInternalServerError)
 }
 
+func defaultBadRequestHandler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "Bad Request", http.StatusBadRequest)
+}
+
 // Options is a struct for specifying configuration options for the secure.Secure middleware.
 type Options struct {
 	// If BrowserXssFilter is true, adds the X-XSS-Protection header with the value `1; mode=block`. Default is false.
-	BrowserXssFilter bool // nolint: golint
+	BrowserXssFilter bool //nolint:stylecheck
 	// If ContentTypeNosniff is true, adds the X-Content-Type-Options header with the value `nosniff`. Default is false.
 	ContentTypeNosniff bool
 	// If ForceSTSHeader is set to true, the STS header will be added even when the connection is HTTP. Default is false.
@@ -69,7 +77,7 @@ type Options struct {
 	// ContentSecurityPolicyReportOnly allows the Content-Security-Policy-Report-Only header value to be set with a custom value. Default is "".
 	ContentSecurityPolicyReportOnly string
 	// CustomBrowserXssValue allows the X-XSS-Protection header value to be set with a custom value. This overrides the BrowserXssFilter option. Default is "".
-	CustomBrowserXssValue string // nolint: golint
+	CustomBrowserXssValue string //nolint:stylecheck
 	// Passing a template string will replace `$NONCE` with a dynamic nonce value of 16 bytes for each request which can be later retrieved using the Nonce function.
 	// Eg: script-src $NONCE -> script-src 'nonce-a2ZobGFoZg=='
 	// CustomFrameOptionsValue allows the X-Frame-Options header value to be set with a custom value. This overrides the FrameDeny option. Default is "".
@@ -84,13 +92,17 @@ type Options struct {
 	FeaturePolicy string
 	// PermissionsPolicy allows to selectively enable and disable use of various browser features and APIs. Default is "".
 	PermissionsPolicy string
+	// CrossOriginOpenerPolicy allows you to ensure a top-level document does not share a browsing context group with cross-origin documents. Default is "".
+	// Reference: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy
+	CrossOriginOpenerPolicy string
 	// SSLHost is the host name that is used to redirect http requests to https. Default is "", which indicates to use the same host.
 	SSLHost string
-	// AllowedHosts is a list of fully qualified domain names that are allowed. Default is empty list, which allows any and all host names.
+	// AllowedHosts is a slice of fully qualified domain names that are allowed. Default is an empty slice, which allows any and all host names.
 	AllowedHosts []string
-	// AllowedHostsAreRegex determines, if the provided slice contains valid regular expressions. If this flag is set to true, every request's
-	// host will be checked against these expressions. Default is false for backwards compatibility.
+	// AllowedHostsAreRegex determines, if the provided `AllowedHosts` slice contains valid regular expressions. If this flag is set to true, every request's host will be checked against these expressions. Default is false.
 	AllowedHostsAreRegex bool
+	// AllowRequestFunc is a custom function that allows you to determine if the request should proceed or not based on your own custom logic. Default is nil.
+	AllowRequestFunc AllowRequestFunc
 	// HostsProxyHeaders is a set of header keys that may hold a proxied hostname value for the request.
 	HostsProxyHeaders []string
 	// SSLHostFunc is a function pointer, the return value of the function is the host name that has same functionality as `SSHost`. Default is nil.
@@ -115,6 +127,9 @@ type Secure struct {
 	// badHostHandler is the handler used when an incorrect host is passed in.
 	badHostHandler http.Handler
 
+	// badRequestHandler is the handler used when the AllowRequestFunc rejects a request.
+	badRequestHandler http.Handler
+
 	// cRegexAllowedHosts saves the compiled regular expressions of the AllowedHosts
 	// option for subsequent use in processRequest
 	cRegexAllowedHosts []*regexp.Regexp
@@ -132,14 +147,15 @@ func New(options ...Options) *Secure {
 		o = options[0]
 	}
 
-	o.ContentSecurityPolicy = strings.Replace(o.ContentSecurityPolicy, "$NONCE", "'nonce-%[1]s'", -1)
-	o.ContentSecurityPolicyReportOnly = strings.Replace(o.ContentSecurityPolicyReportOnly, "$NONCE", "'nonce-%[1]s'", -1)
+	o.ContentSecurityPolicy = strings.ReplaceAll(o.ContentSecurityPolicy, "$NONCE", "'nonce-%[1]s'")
+	o.ContentSecurityPolicyReportOnly = strings.ReplaceAll(o.ContentSecurityPolicyReportOnly, "$NONCE", "'nonce-%[1]s'")
 
 	o.nonceEnabled = strings.Contains(o.ContentSecurityPolicy, "%[1]s") || strings.Contains(o.ContentSecurityPolicyReportOnly, "%[1]s")
 
 	s := &Secure{
-		opt:            o,
-		badHostHandler: http.HandlerFunc(defaultBadHostHandler),
+		opt:               o,
+		badHostHandler:    http.HandlerFunc(defaultBadHostHandler),
+		badRequestHandler: http.HandlerFunc(defaultBadRequestHandler),
 	}
 
 	if s.opt.AllowedHostsAreRegex {
@@ -164,6 +180,11 @@ func New(options ...Options) *Secure {
 // SetBadHostHandler sets the handler to call when secure rejects the host name.
 func (s *Secure) SetBadHostHandler(handler http.Handler) {
 	s.badHostHandler = handler
+}
+
+// SetBadRequestHandler sets the handler to call when the AllowRequestFunc rejects a request.
+func (s *Secure) SetBadRequestHandler(handler http.Handler) {
+	s.badRequestHandler = handler
 }
 
 // Handler implements the http.HandlerFunc for integration with the standard net/http lib.
@@ -303,7 +324,6 @@ func (s *Secure) processRequest(w http.ResponseWriter, r *http.Request) (http.He
 				}
 			}
 		}
-
 		if !isGoodHost {
 			s.badHostHandler.ServeHTTP(w, r)
 			return nil, nil, fmt.Errorf("bad host name: %s", host)
@@ -358,6 +378,12 @@ func (s *Secure) processRequest(w http.ResponseWriter, r *http.Request) (http.He
 			http.Redirect(w, r, url.String(), status)
 			return nil, nil, fmt.Errorf("redirecting to HTTPS")
 		}
+	}
+
+	// If the AllowRequestFunc is set, call it and exit early if needed.
+	if s.opt.AllowRequestFunc != nil && !s.opt.AllowRequestFunc(r) {
+		s.badRequestHandler.ServeHTTP(w, r)
+		return nil, nil, fmt.Errorf("request not allowed")
 	}
 
 	// Create our header container.
@@ -433,6 +459,11 @@ func (s *Secure) processRequest(w http.ResponseWriter, r *http.Request) (http.He
 	// Permissions Policy header.
 	if len(s.opt.PermissionsPolicy) > 0 {
 		responseHeader.Set(permissionsPolicyHeader, s.opt.PermissionsPolicy)
+	}
+
+	// Cross Origin Opener Policy header.
+	if len(s.opt.CrossOriginOpenerPolicy) > 0 {
+		responseHeader.Set(coopHeader, s.opt.CrossOriginOpenerPolicy)
 	}
 
 	// Expect-CT header.

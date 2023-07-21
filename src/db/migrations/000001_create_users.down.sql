@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS users;
+DROP TYPE IF EXISTS enum_user_role;

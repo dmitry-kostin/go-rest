@@ -1,25 +1,29 @@
 package main
 
 import (
-	"github.com/dmitry-kostin/go-rest/internal/application"
-	"github.com/dmitry-kostin/go-rest/internal/application/server"
-	"github.com/dmitry-kostin/go-rest/pkg/config"
-	log "github.com/sirupsen/logrus"
+	"github.com/dmitry-kostin/go-rest/cmd/rest"
+	"github.com/dmitry-kostin/go-rest/src/db"
+	"github.com/dmitry-kostin/go-rest/src/pkg"
+	"os"
 )
 
 func main() {
-	initLogger()
-	config.LoadConfig()
-	app := application.NewApplication()
-	server.StartServer(app)
+	stdConfig := pkg.NewConfig()
+	stdLogger := initLogger(stdConfig)
+	dbConnectionPool := db.InitPostgresConnectionPool(stdConfig, stdLogger)
+
+	container := rest.InitContainer(stdConfig, stdLogger, dbConnectionPool)
+
+	exitFn := func() { os.Exit(1) }
+	service := rest.InitService(stdConfig, stdLogger, container, exitFn)
+
+	go service.StartRESTServer()
+	service.WaitForStopSignal()
 }
 
-func initLogger() {
-	if config.AppConfig.AppEnv == "LOCAL" {
-		log.SetFormatter(&log.JSONFormatter{})
-		log.SetLevel(log.InfoLevel)
-	} else {
-		log.SetFormatter(&log.TextFormatter{})
-		log.SetLevel(log.DebugLevel)
+func initLogger(appConfig *pkg.Config) *pkg.Logger {
+	if appConfig.AppEnv == "LOCAL" {
+		return pkg.NewPrettyLogger()
 	}
+	return pkg.NewLogger()
 }

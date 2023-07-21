@@ -21,16 +21,19 @@
 
 ### Prepare environment variables
 * Create and fill the `.env` file according to the example `.example.env`
-* Export environment variables in a single command `export $(grep -v '^#' .env | xargs)`
+* Export environment variables from `.env` in any suitable way for you
+  * eg.: `export $(grep -v '^#' .env | xargs)`
+  * eg.: or set an alias for zshrc / bashrc `alias loadenv="export \$(grep -v '^#' .env | xargs)"`
+  * eg.: utilities like [direnv](https://direnv.net/) also could be helpful
 
 ### Setup a database
 * Install [docker](https://docs.docker.com/desktop/mac/install/)
-* Run database image `docker-compose up -d --build`
-* Run migrations (refer to section below)
+* Run database image `docker compose up -d`
+* Run migrations (refer to a section below)
 
 ### Run application in development mode
 
-We use air for live-reloading during development
+I use air for live-reloading during development
 
 * Install [air](https://github.com/cosmtrek/air) for live reloading 
 * Run `air`

@@ -1,15 +1,28 @@
-version: '3.5'
+version: '3.7'
 
 services:
-  pg-db:
+  pdb:
     image: postgres:latest
-    container_name: pg-db
+    container_name: pdb
     restart: unless-stopped
     volumes:
+      - ./src/db/init-db-scripts:/docker-entrypoint-initdb.d
       - ./tmp/pgdata:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_INIT=${DB_APP_USER}:${DB_APP_PASSWORD}:${DB_APP_NAME}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+      interval: 1s
+      timeout: 5s
+      retries: 20
     ports:
-      - 5432:5432
+      - '5432:5432'
+    networks:
+      - intranet
+
+networks:
+  intranet:
+
+

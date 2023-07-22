@@ -36,6 +36,7 @@ you can quickly remove the parts you don't need and add the ones you need.
 - Logging
 - Configuration, while `.env` file is present in project root, it's up to you how to load it 
 - Service layer, can serve as an excellent starting point for DDD services or basic CRUD operations
+- Struct validations using govalidator as a fast and replaceble solution especially if you in favor of other methods
 
 
 ## Getting Started

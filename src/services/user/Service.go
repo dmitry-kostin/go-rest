@@ -2,7 +2,6 @@ package user
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/cockroachdb/errors"
 	"github.com/dmitry-kostin/go-rest/src/pkg"
@@ -40,7 +39,6 @@ func (s *Service) CreateUser(rw http.ResponseWriter, rq *http.Request) (interfac
 	if err != nil {
 		return nil, pkg.AnnotateErrorWithDetail(err, pkg.ErrBadInput, wrapWith, "Provided input is invalid")
 	}
-	fmt.Println(data)
 	_, err = govalidator.ValidateStruct(&data)
 	if err != nil {
 		return nil, pkg.AnnotateErrorWithDetail(err, pkg.ErrBadInput, wrapWith, "Input validation failed, please recheck your data")

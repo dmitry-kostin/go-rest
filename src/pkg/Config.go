@@ -1,12 +1,10 @@
 package pkg
 
 import (
-	"fmt"
 	"github.com/caarlos0/env/v9"
-	"os"
 )
 
-// Version can now be provided on build using -ldflags "-X=back/pkg/config.Version"
+// Version can now be provided on build using -ldflags "-X github.com/dmitry-kostin/go-rest/src/pkg.Version=1.0.0"
 var Version string
 
 type Config struct {
@@ -25,8 +23,7 @@ func NewConfig() *Config {
 	cnf := &Config{}
 	opts := env.Options{RequiredIfNoDef: true}
 	if err := env.ParseWithOptions(cnf, opts); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
 	}
 	cnf.Version = Version
 	return cnf

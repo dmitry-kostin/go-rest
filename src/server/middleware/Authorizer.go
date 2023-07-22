@@ -59,7 +59,6 @@ func (s *Authorizer) isTokenValid(rawKey string, availableKeys [][]byte) bool {
 	hash := sha256.Sum256([]byte(rawKey))
 	key := hash[:]
 	for _, value := range availableKeys {
-		s.logger.Info().Msgf("checking %d %d", len(key), len(value))
 		contentEqual := subtle.ConstantTimeCompare(value, key) == 1
 		if contentEqual {
 			return true

@@ -19,7 +19,7 @@
   </p>
 </p>
 
-## Getting Started
+## Brief introduction notes
 
 Sometimes you just need to start a new project, but you don't want to spend time on setting up the project structure,
 configuring the database, and do other things that are not strictly related to the business logic of your application

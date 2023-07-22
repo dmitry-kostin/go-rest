@@ -1,60 +1,114 @@
 # github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 ## explicit; go 1.13
 github.com/asaskevich/govalidator
-# github.com/caarlos0/env/v6 v6.10.1
+# github.com/caarlos0/env/v9 v9.0.0
 ## explicit; go 1.17
-github.com/caarlos0/env/v6
+github.com/caarlos0/env/v9
+# github.com/cockroachdb/errors v1.10.0
+## explicit; go 1.17
+github.com/cockroachdb/errors
+github.com/cockroachdb/errors/assert
+github.com/cockroachdb/errors/barriers
+github.com/cockroachdb/errors/contexttags
+github.com/cockroachdb/errors/domains
+github.com/cockroachdb/errors/errbase
+github.com/cockroachdb/errors/errorspb
+github.com/cockroachdb/errors/errutil
+github.com/cockroachdb/errors/hintdetail
+github.com/cockroachdb/errors/issuelink
+github.com/cockroachdb/errors/markers
+github.com/cockroachdb/errors/report
+github.com/cockroachdb/errors/safedetails
+github.com/cockroachdb/errors/secondary
+github.com/cockroachdb/errors/stdstrings
+github.com/cockroachdb/errors/telemetrykeys
+github.com/cockroachdb/errors/withstack
+# github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b
+## explicit; go 1.16
+github.com/cockroachdb/logtags
+# github.com/cockroachdb/redact v1.1.5
+## explicit; go 1.14
+github.com/cockroachdb/redact
+github.com/cockroachdb/redact/builder
+github.com/cockroachdb/redact/interfaces
+github.com/cockroachdb/redact/internal/buffer
+github.com/cockroachdb/redact/internal/escape
+github.com/cockroachdb/redact/internal/fmtforward
+github.com/cockroachdb/redact/internal/markers
+github.com/cockroachdb/redact/internal/redact
+github.com/cockroachdb/redact/internal/rfmt
+github.com/cockroachdb/redact/internal/rfmt/fmtsort
 # github.com/fsnotify/fsnotify v1.6.0
 ## explicit; go 1.16
 github.com/fsnotify/fsnotify
+# github.com/getsentry/sentry-go v0.22.0
+## explicit; go 1.18
+github.com/getsentry/sentry-go
+github.com/getsentry/sentry-go/internal/debug
+github.com/getsentry/sentry-go/internal/otel/baggage
+github.com/getsentry/sentry-go/internal/otel/baggage/internal/baggage
+github.com/getsentry/sentry-go/internal/ratelimit
+github.com/getsentry/sentry-go/internal/traceparser
+# github.com/gogo/protobuf v1.3.2
+## explicit; go 1.15
+github.com/gogo/protobuf/gogoproto
+github.com/gogo/protobuf/proto
+github.com/gogo/protobuf/protoc-gen-gogo/descriptor
+github.com/gogo/protobuf/sortkeys
+github.com/gogo/protobuf/types
 # github.com/google/uuid v1.3.0
 ## explicit
 github.com/google/uuid
 # github.com/gorilla/mux v1.8.0
 ## explicit; go 1.12
 github.com/gorilla/mux
-# github.com/jackc/chunkreader/v2 v2.0.1
-## explicit; go 1.12
-github.com/jackc/chunkreader/v2
-# github.com/jackc/pgconn v1.14.0
-## explicit; go 1.12
-github.com/jackc/pgconn
-github.com/jackc/pgconn/internal/ctxwatch
-github.com/jackc/pgconn/stmtcache
-# github.com/jackc/pgio v1.0.0
-## explicit; go 1.12
-github.com/jackc/pgio
 # github.com/jackc/pgpassfile v1.0.0
 ## explicit; go 1.12
 github.com/jackc/pgpassfile
-# github.com/jackc/pgproto3/v2 v2.3.2
-## explicit; go 1.12
-github.com/jackc/pgproto3/v2
 # github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a
 ## explicit; go 1.14
 github.com/jackc/pgservicefile
-# github.com/jackc/pgtype v1.14.0
-## explicit; go 1.13
-github.com/jackc/pgtype
-# github.com/jackc/pgx/v4 v4.18.1
-## explicit; go 1.13
-github.com/jackc/pgx/v4
-github.com/jackc/pgx/v4/internal/sanitize
-github.com/jackc/pgx/v4/pgxpool
-# github.com/jackc/puddle v1.3.0
+# github.com/jackc/pgx/v5 v5.4.2
+## explicit; go 1.19
+github.com/jackc/pgx/v5
+github.com/jackc/pgx/v5/internal/anynil
+github.com/jackc/pgx/v5/internal/iobufpool
+github.com/jackc/pgx/v5/internal/pgio
+github.com/jackc/pgx/v5/internal/sanitize
+github.com/jackc/pgx/v5/internal/stmtcache
+github.com/jackc/pgx/v5/pgconn
+github.com/jackc/pgx/v5/pgconn/internal/bgreader
+github.com/jackc/pgx/v5/pgconn/internal/ctxwatch
+github.com/jackc/pgx/v5/pgproto3
+github.com/jackc/pgx/v5/pgtype
+github.com/jackc/pgx/v5/pgxpool
+# github.com/jackc/puddle/v2 v2.2.0
+## explicit; go 1.19
+github.com/jackc/puddle/v2
+github.com/jackc/puddle/v2/internal/genstack
+# github.com/kr/pretty v0.3.1
 ## explicit; go 1.12
-github.com/jackc/puddle
+github.com/kr/pretty
+# github.com/kr/text v0.2.0
+## explicit
+github.com/kr/text
+# github.com/mattn/go-colorable v0.1.13
+## explicit; go 1.15
+github.com/mattn/go-colorable
+# github.com/mattn/go-isatty v0.0.19
+## explicit; go 1.15
+github.com/mattn/go-isatty
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# github.com/rs/zerolog v1.15.0
-## explicit
+# github.com/rogpeppe/go-internal v1.11.0
+## explicit; go 1.19
+github.com/rogpeppe/go-internal/fmtsort
+# github.com/rs/zerolog v1.29.1
+## explicit; go 1.15
 github.com/rs/zerolog
 github.com/rs/zerolog/internal/cbor
 github.com/rs/zerolog/internal/json
-# github.com/sirupsen/logrus v1.9.3
-## explicit; go 1.13
-github.com/sirupsen/logrus
 # github.com/unrolled/render v1.6.0
 ## explicit; go 1.17
 github.com/unrolled/render
@@ -67,8 +121,12 @@ github.com/urfave/negroni
 # golang.org/x/crypto v0.11.0
 ## explicit; go 1.17
 golang.org/x/crypto/pbkdf2
+# golang.org/x/sync v0.1.0
+## explicit
+golang.org/x/sync/semaphore
 # golang.org/x/sys v0.10.0
 ## explicit; go 1.17
+golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows

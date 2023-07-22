@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/dmitry-kostin/go-rest/src/pkg"
 	"github.com/dmitry-kostin/go-rest/src/services/ping/models"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"net/http"
 )
 
@@ -18,12 +18,11 @@ func NewService(pg *pgxpool.Pool, config *pkg.Config) *Service {
 }
 
 func (s Service) Ping(http.ResponseWriter, *http.Request) (interface{}, error) {
+	wrapWith := "[Service.Ping]"
 	err := s.pg.Ping(context.Background())
 	if err != nil {
-		return nil, err
+		return nil, pkg.AnnotateError(err, pkg.ErrDatabaseError, wrapWith)
 	}
-	logger := pkg.NewLogger()
-	logger.Info().Msg("Ping")
 	return &models.Ping{
 		Pong:    "You reached the destination. Pong.",
 		Version: s.config.Version,

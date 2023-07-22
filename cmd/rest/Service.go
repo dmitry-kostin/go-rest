@@ -2,9 +2,9 @@ package rest
 
 import (
 	"context"
+	"github.com/cockroachdb/errors"
 	"github.com/dmitry-kostin/go-rest/src/application"
 	"github.com/dmitry-kostin/go-rest/src/pkg"
-	"github.com/pkg/errors"
 	"net/http"
 	"os"
 	"os/signal"
@@ -36,15 +36,22 @@ func InitService(
 }
 
 func (s *Service) buildRESTSService() {
-	s.container.services.restServer.AddRoute(
-		&application.Route{Name: "Ping", Method: "GET", Pattern: "/ping", Handler: s.container.services.pingService.Ping},
-	)
+	router := s.container.server.router
+	router.AddRoutes("/api", false, []application.Route{
+		{Name: "Ping", Method: "GET", Pattern: "/ping", Handler: s.container.services.pingService.Ping},
+	})
+	//router.AddRoutes("/api", true, []application.Route{
+	//	{Name: "CreateUser", Method: "POST", Pattern: "/users", Handler: s.container.services.userService.CreateUser},
+	//	{Name: "ListUsers", Method: "GET", Pattern: "/users", Handler: s.container.services.userService.ListUsers},
+	//	{Name: "GetUser", Method: "GET", Pattern: "/users/{id}", Handler: s.container.services.userService.GetUser},
+	//	{Name: "RemoveUser", Method: "DELETE", Pattern: "/users/{id}", Handler: s.container.services.userService.RemoveUser},
+	//})
 }
 
 func (s *Service) StartRESTServer() {
 	s.logger.Info().Msgf("[service] starting REST server on %s:%s ...", s.config.AppHostName, s.config.AppPort)
-	restServer := s.container.services.restServer
-	if err := restServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	server := s.container.server.REST
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		s.logger.Error().Msgf("[service] server failed to start: %s", err)
 		s.shutdown()
 	}
@@ -67,10 +74,10 @@ func (s *Service) shutdown() {
 		s.logger.Info().Msg("[service] canceling context ...")
 		s.exitFn()
 	}
-	restServer := s.container.services.restServer
-	if restServer != nil {
+	server := s.container.server.REST
+	if server != nil {
 		s.logger.Info().Msg("[service] stopping server gracefully ...")
-		if err := restServer.Shutdown(context.Background()); err != nil {
+		if err := server.Shutdown(context.Background()); err != nil {
 			s.logger.Warn().Msgf("shutdown: failed to stop the REST server: %s", err)
 		}
 	}

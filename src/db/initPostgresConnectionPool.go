@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/dmitry-kostin/go-rest/src/pkg"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func InitPostgresConnectionPool(config *pkg.Config, logger *pkg.Logger) *pgxpool.Pool {
 	uri := fmt.Sprintf("postgres://%s:%s@%s:5432/%s?sslmode=disable", config.DatabaseUser, config.DatabasePassword, config.DatabaseHostname, config.DatabaseName)
-	conn, err := pgxpool.Connect(context.Background(), uri)
+	conn, err := pgxpool.New(context.Background(), uri)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("[database] unable to connect to database")
 	}

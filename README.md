@@ -56,6 +56,6 @@ migrate create -ext sql -dir db/migrations -seq create_users
 
 Run migrations all the way up or down
 ```
-migrate -database ${DB_URI} -path ./db/migrations up
-migrate -database ${DB_URI} -path db/migrations down
+migrate -database ${DB_URI} -path src/db/migrations up
+migrate -database ${DB_URI} -path src/db/migrations down
 ```

@@ -94,7 +94,8 @@ To generate API keys, you can use the following command:
 
 `$ openssl rand -base64 32`
 
-This command will generate a 32-byte random string, which is a good length for API keys
+This command will generate a 32-byte random string, which is a good enough length for secrets.
+
 To be able to use that key in the application, you need to create a sha256 hash from it:
 
 `$ echo -n "<you_key>" | sha256sum`

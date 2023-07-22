@@ -12,7 +12,6 @@ require (
 	github.com/rs/zerolog v1.29.1
 	github.com/unrolled/render v1.6.0
 	github.com/unrolled/secure v1.13.0
-	github.com/urfave/negroni v1.0.0
 )
 
 require (

@@ -3,17 +3,22 @@ package middleware
 import (
 	"fmt"
 	"github.com/dmitry-kostin/go-rest/src/pkg"
-	"github.com/urfave/negroni"
 	"net/http"
 	"time"
 )
 
-type Logger struct {
-	*pkg.Logger
+type StatusCodeResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
 }
 
-func NewLogger(logger *pkg.Logger) *Logger {
-	return &Logger{logger}
+func (s *StatusCodeResponseWriter) Status() int {
+	return s.statusCode
+}
+
+func (s *StatusCodeResponseWriter) WriteHeader(code int) {
+	s.statusCode = code
+	s.ResponseWriter.WriteHeader(code)
 }
 
 type logEntry struct {
@@ -28,14 +33,25 @@ func (s logEntry) String() string {
 	return fmt.Sprintf("%d | \t %s | %s | %s %s", s.Status, s.Duration, s.Hostname, s.Method, s.Path)
 }
 
-func (s *Logger) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	start := time.Now()
-	next(rw, r)
-	s.Debug().Msgf("[request] %v", &logEntry{
-		Status:   rw.(negroni.ResponseWriter).Status(),
-		Duration: time.Since(start),
-		Hostname: r.Host,
-		Method:   r.Method,
-		Path:     r.URL.Path,
+type Logger struct {
+	*pkg.Logger
+}
+
+func NewLogger(logger *pkg.Logger) *Logger {
+	return &Logger{logger}
+}
+
+func (s *Logger) Middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		statusCodeRW := &StatusCodeResponseWriter{rw, http.StatusOK}
+		next.ServeHTTP(statusCodeRW, r)
+		s.Debug().Msgf("[request] %v", &logEntry{
+			Status:   statusCodeRW.statusCode,
+			Duration: time.Since(start),
+			Hostname: r.Host,
+			Method:   r.Method,
+			Path:     r.URL.Path,
+		})
 	})
 }

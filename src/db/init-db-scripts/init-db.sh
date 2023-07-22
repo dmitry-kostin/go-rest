@@ -11,7 +11,7 @@ for i in "${ADDR[@]}"; do
     PASSWORD="${INFO[1]}"
     DB="${INFO[2]}"
 
-    echo "init $USER $PASSWORD $DB"
+    echo "Creating user: $USER with password *** on database $DB"
 
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
       CREATE DATABASE $DB;

@@ -40,12 +40,12 @@ func (s *Service) buildRESTSService() {
 	router.AddRoutes("/api", false, []application.Route{
 		{Name: "Ping", Method: "GET", Pattern: "/ping", Handler: s.container.services.pingService.Ping},
 	})
-	//router.AddRoutes("/api", true, []application.Route{
-	//	{Name: "CreateUser", Method: "POST", Pattern: "/users", Handler: s.container.services.userService.CreateUser},
-	//	{Name: "ListUsers", Method: "GET", Pattern: "/users", Handler: s.container.services.userService.ListUsers},
-	//	{Name: "GetUser", Method: "GET", Pattern: "/users/{id}", Handler: s.container.services.userService.GetUser},
-	//	{Name: "RemoveUser", Method: "DELETE", Pattern: "/users/{id}", Handler: s.container.services.userService.RemoveUser},
-	//})
+	router.AddRoutes("/api/users", true, []application.Route{
+		{Name: "CreateUser", Method: "POST", Pattern: "", Handler: s.container.services.userService.CreateUser},
+		{Name: "ListUsers", Method: "GET", Pattern: "", Handler: s.container.services.userService.ListUsers},
+		{Name: "GetUser", Method: "GET", Pattern: "/{id}", Handler: s.container.services.userService.GetUser},
+		{Name: "RemoveUser", Method: "DELETE", Pattern: "/{id}", Handler: s.container.services.userService.RemoveUser},
+	})
 }
 
 func (s *Service) StartRESTServer() {

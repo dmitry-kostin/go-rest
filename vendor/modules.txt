@@ -115,9 +115,6 @@ github.com/unrolled/render
 # github.com/unrolled/secure v1.13.0
 ## explicit; go 1.13
 github.com/unrolled/secure
-# github.com/urfave/negroni v1.0.0
-## explicit
-github.com/urfave/negroni
 # golang.org/x/crypto v0.11.0
 ## explicit; go 1.17
 golang.org/x/crypto/pbkdf2

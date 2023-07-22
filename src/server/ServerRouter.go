@@ -5,44 +5,46 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/dmitry-kostin/go-rest/src/application"
 	"github.com/dmitry-kostin/go-rest/src/pkg"
+	"github.com/dmitry-kostin/go-rest/src/server/middleware"
 	"github.com/gorilla/mux"
 	"github.com/unrolled/render"
-	"github.com/urfave/negroni"
 	"net/http"
 )
 
 type Router struct {
-	muxRouter *mux.Router
-	renderer  *render.Render
-	logger    *pkg.Logger
+	muxRouter            *mux.Router
+	renderer             *render.Render
+	logger               *pkg.Logger
+	authorizerMiddleware *middleware.Authorizer
 }
 
-func NewRouter(logger *pkg.Logger) *Router {
+func NewRouter(logger *pkg.Logger, config *pkg.Config) *Router {
+	muxRouter := mux.NewRouter().StrictSlash(true)
+	muxRouter.Use(middleware.NewLogger(logger).Middleware)
+	muxRouter.Use(middleware.NewSecure(config).Middleware)
+	renderer := render.New()
 	return &Router{
-		muxRouter: mux.NewRouter().StrictSlash(true),
-		renderer:  render.New(),
-		logger:    logger,
+		muxRouter:            muxRouter,
+		renderer:             renderer,
+		logger:               logger,
+		authorizerMiddleware: middleware.NewAuthorizer(renderer, config, logger),
 	}
 }
 
 func (s *Router) AddRoutes(prefix string, protected bool, route []application.Route) {
-	gr := mux.NewRouter().PathPrefix(prefix).Subrouter().StrictSlash(true)
+	gr := s.muxRouter.PathPrefix(prefix).Subrouter().StrictSlash(true)
+	if protected {
+		gr.Use(s.authorizerMiddleware.Middleware)
+	}
 	for _, r := range route {
 		gr.Methods(r.Method).Path(r.Pattern).Name(r.Name).
 			HandlerFunc(s.makeHandlerFunc(r.Handler))
 	}
-	s.muxRouter.PathPrefix(prefix).Handler(negroni.New(
-		negroni.Wrap(gr),
-	))
 }
 
 func (s *Router) makeHandlerFunc(handlerFunc application.HandlerFunc) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		statusCode := rw.(negroni.ResponseWriter).Status()
-		if statusCode == 0 {
-			statusCode = http.StatusOK
-		}
-		rw.Header().Set("X-Powered-By", "PHP/5.4.0")
+		statusCode := rw.(*middleware.StatusCodeResponseWriter).Status()
 		v, err := handlerFunc(rw, r)
 		if err != nil {
 			s.onHandlerError(rw, r, err)
@@ -58,7 +60,7 @@ func (s *Router) onHandlerError(rw http.ResponseWriter, rq *http.Request, err er
 	}
 	s.logger.Error().Err(err).Send()
 	errorResponse := ErrorResponse{
-		Status:  rw.(negroni.ResponseWriter).Status(),
+		Status:  rw.(*middleware.StatusCodeResponseWriter).Status(),
 		Message: "Something went wrong. Please try again later ...",
 		Errors:  []string{errors.Cause(err).Error()},
 	}

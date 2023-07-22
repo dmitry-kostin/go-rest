@@ -72,7 +72,7 @@ func (s *Container) GetRestServer() *server.Server {
 
 func (s *Container) GetRestServerRouter() *server.Router {
 	if s.server.router == nil {
-		s.server.router = server.NewRouter(s.logger)
+		s.server.router = server.NewRouter(s.logger, s.config)
 	}
 	return s.server.router
 }

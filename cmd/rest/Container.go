@@ -58,7 +58,7 @@ func (s *Container) GetUserRepository() models.UserRepository {
 
 func (s *Container) GetUserService() *user.Service {
 	if s.services.userService == nil {
-		s.services.userService = user.NewService(s.GetUserRepository(), s.config)
+		s.services.userService = user.NewService(s.GetUserRepository())
 	}
 	return s.services.userService
 }

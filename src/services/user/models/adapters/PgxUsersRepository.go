@@ -33,7 +33,7 @@ func (s *PgxUsersRepository) CreateUser(user *models.User) error {
 	return nil
 }
 
-func (s *PgxUsersRepository) ListUsers() (*[]models.User, error) {
+func (s *PgxUsersRepository) ListUsers() ([]*models.User, error) {
 	wrapWith := "[PgxUsersRepository.ListUsers]"
 	ctx := context.Background()
 	sqlStatement := `select id, identity_id, email, role, first_name, last_name, created_at, updated_at from users`
@@ -41,7 +41,7 @@ func (s *PgxUsersRepository) ListUsers() (*[]models.User, error) {
 	if err != nil {
 		return nil, s.handleError(err, wrapWith)
 	}
-	users := make([]models.User, 0)
+	users := make([]*models.User, 0)
 	defer rows.Close()
 	for rows.Next() {
 		var user models.User
@@ -49,9 +49,9 @@ func (s *PgxUsersRepository) ListUsers() (*[]models.User, error) {
 		if err != nil {
 			return nil, s.handleError(err, wrapWith)
 		}
-		users = append(users, user)
+		users = append(users, &user)
 	}
-	return &users, nil
+	return users, nil
 }
 
 func (s *PgxUsersRepository) RemoveUser(userId models.EntityId) error {

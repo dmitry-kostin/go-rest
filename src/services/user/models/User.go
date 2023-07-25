@@ -24,3 +24,16 @@ type User struct {
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }
+
+func NewUser(identityId uuid.UUID, email, firstName, lastName string, role UserRole) *User {
+	return &User{
+		Id:         uuid.New(),
+		IdentityId: identityId,
+		Email:      email,
+		Role:       role,
+		FirstName:  firstName,
+		LastName:   lastName,
+		CreatedAt:  time.Now().UTC(),
+		UpdatedAt:  time.Now().UTC(),
+	}
+}

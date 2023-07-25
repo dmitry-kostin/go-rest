@@ -9,16 +9,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"net/http"
-	"time"
 )
 
 type Service struct {
 	repository models.UserRepository
-	config     *pkg.Config
 }
 
-func NewService(repository models.UserRepository, config *pkg.Config) *Service {
-	return &Service{repository, config}
+func NewService(repository models.UserRepository) *Service {
+	return &Service{repository}
 }
 
 type CreateUserRequestBody struct {
@@ -43,16 +41,7 @@ func (s *Service) CreateUser(rw http.ResponseWriter, rq *http.Request) (interfac
 	if err != nil {
 		return nil, pkg.AnnotateErrorWithDetail(err, pkg.ErrBadInput, wrapWith, "Input validation failed, please recheck your data")
 	}
-	user := &models.User{
-		Id:         uuid.New(),
-		IdentityId: data.IdentityId,
-		Email:      data.Email,
-		Role:       models.Customer,
-		FirstName:  data.FirstName,
-		LastName:   data.LastName,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
-	}
+	user := models.NewUser(data.IdentityId, data.Email, data.FirstName, data.LastName, models.Customer)
 	err = s.repository.CreateUser(user)
 	if err != nil {
 		return nil, err

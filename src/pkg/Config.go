@@ -15,7 +15,7 @@ type Config struct {
 	DatabaseUser     string   `env:"DB_APP_USER"`
 	DatabasePassword string   `env:"DB_APP_PASSWORD"`
 	DatabaseHostname string   `env:"DB_APP_HOSTNAME" envDefault:"127.0.0.1"`
-	AppAPIKeys       []string `env:"APP_API_KEYS"`
+	AppAPIKeys       []string `env:"APP_API_KEYS" envDefault:""`
 	Version          string   `envDefault:"-"`
 }
 

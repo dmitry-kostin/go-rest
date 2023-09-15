@@ -22,6 +22,24 @@ services:
     networks:
       - intranet
 
+  migrate:
+    image: migrate/migrate:latest
+    profiles:
+      - tools
+    volumes:
+      - ./src/db/migrations:/migrations
+    command:
+      - "-database"
+      - "${DB_URI_MIGRATIONS}"
+      - "-path"
+      - "/migrations/"
+      - "up"
+    depends_on:
+      pdb:
+        condition: service_healthy
+    networks:
+      - intranet
+
 networks:
   intranet:
 

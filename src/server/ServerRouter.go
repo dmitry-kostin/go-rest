@@ -66,6 +66,7 @@ func (s *Router) onHandlerError(rw http.ResponseWriter, rq *http.Request, err er
 	}
 	var govalidatorErrs govalidator.Errors
 	if errors.As(err, &govalidatorErrs) {
+		errorResponse.Status = http.StatusBadRequest
 		errorResponse.Errors = func() []string {
 			var errs []string
 			for _, err := range govalidatorErrs.Errors() {
@@ -90,7 +91,7 @@ func (s *Router) onHandlerError(rw http.ResponseWriter, rq *http.Request, err er
 	if len(errorDetails) > 0 {
 		errorResponse.Message = errorDetails
 	}
-	if errorResponse.Status == 0 {
+	if errorResponse.Status == http.StatusOK {
 		errorResponse.Status = http.StatusInternalServerError
 	}
 	_ = s.renderer.JSON(rw, errorResponse.Status, errorResponse)

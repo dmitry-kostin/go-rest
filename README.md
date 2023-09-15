@@ -79,6 +79,12 @@ I use air for live-reloading during development
 
 Or build and run the application directly `go build -o ./tmp ./cmd/api-service && ./tmp/api-service`
 
+### Tests
+
+```bash
+ go test -coverprofile=coverage.out ./... && go tool cover -html=coverage.out
+```
+
 ### Authentication
 
 The application uses API keys for authentication, which are typically passed in the `Authorization` header using Bearer 

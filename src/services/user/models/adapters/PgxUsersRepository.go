@@ -79,8 +79,8 @@ func (s *PgxUsersRepository) GetUser(userId models.EntityId) (*models.User, erro
 }
 
 func (s *PgxUsersRepository) handleError(err error, wrapWith string) error {
-	var duplicateEntryError = &pgconn.PgError{Code: "23505"}
-	if errors.As(err, &duplicateEntryError) {
+	var duplicateEntryError = &pgconn.PgError{}
+	if errors.As(err, &duplicateEntryError) && duplicateEntryError.Code == "23505" {
 		return pkg.AnnotateErrorWithDetail(errors.New("duplicate email address"), pkg.ErrDuplicate, wrapWith, "Provided email address is already in use")
 	}
 	if errors.Is(err, pgx.ErrNoRows) {

@@ -29,3 +29,4 @@ api-service.log
 # other
 .idea
 .env
+coverage.out
